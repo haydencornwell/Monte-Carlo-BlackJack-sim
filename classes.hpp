@@ -2,26 +2,22 @@
  * class definitions using French cards
  */
 
-#ifndef CLASSES_HPP
-    #define CLASSESS_HPP
+#ifndef ___CLASSES_HPP
+    #define ___CLASSESS_HPP
+#endif
+
+#ifdef _MSC_VER
+    #define SODIUM_STATIC=1
 #endif
 
 #include <algorithm>
-#include <array>
-#include <random>
-#include <chrono>
+#include <sodium.h>
+#include <vector>
+#include <stdexcept>
 
 ///////////////////
 ///// OBJECTS /////
 ///////////////////
-
-namespace rando
-{
-    // random seed source
-    std::random_device rd;
-    // pseudo-random sequence generator
-    std::mt19937_64 rand_gen (rd());
-}
 
 /**
  * list of possible suits
@@ -180,7 +176,12 @@ class Shoe
  */
 Deck::Deck()
 {
-
+    //initialize libsodium if it hasn't already
+    if (sodium_init() < 0)
+    {
+        throw std::runtime_error("There was a problem initializing sodium.");
+    }
+    
     // allocate the memory
     deck_cards.reserve(number_of_cards);
 
@@ -206,8 +207,19 @@ Deck::Deck()
  */
 void Deck::shuffle()
 {
-    // shuffle the cards
-    std::shuffle(deck_cards.begin(), deck_cards.end(), rando::rand_gen);
+    unsigned int j;    
+    // shuffle the cards as Durstenfeld
+    for (unsigned int i = 0; i < number_of_cards; i++)
+    {
+        // number_of_cards is 1-indexed
+        j = randombytes_uniform(number_of_cards-1);
+        
+        if (i != j)
+        {
+            std::swap(deck_cards[i],deck_cards[j]);
+        }
+    }
+    
     // reset the deck's card count
     cards_left = number_of_cards;
 }
@@ -264,6 +276,12 @@ std::vector<Card> Deck::cheat_showall() const
  */
 Shoe::Shoe(unsigned short int ndecks)
 {
+    //initialize libsodium if it hasn't already
+    if (sodium_init() < 0)
+    {
+        throw std::runtime_error("There was a problem initializing sodium.");
+    }
+    
     number_of_decks = ndecks;
     cards_left = 52*ndecks;
     // acquire the decks
@@ -278,6 +296,7 @@ Shoe::Shoe(unsigned short int ndecks)
             shoe_cards[j+i*52] = shoe_decks[i].draw();
         }
     }
+    
     this->shuffle();
 }
 
@@ -296,8 +315,19 @@ Card Shoe::draw()
 //! shuffle the shoe (randomize the order of Card objects in the shoe)
 void Shoe::shuffle()
 {
-    // shuffle the cards
-    std::shuffle(shoe_cards.begin(), shoe_cards.end(), rando::rand_gen);
+    unsigned int j;    
+    // shuffle the cards as Durstenfeld
+    for (unsigned int i = 0; i < 52*number_of_decks; i++)
+    {
+        // number_of_cards is 1-indexed
+        j = randombytes_uniform(52*number_of_decks-1);
+        
+        if (i != j)
+        {
+            std::swap(shoe_cards[i],shoe_cards[j]);
+        }
+    }
+    
     // reset the deck's card count
     cards_left = 52*number_of_decks;
 }

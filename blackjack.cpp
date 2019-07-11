@@ -33,6 +33,7 @@ int main()
     unsigned long long int player_wins = 0;
     unsigned short int countdown = 0;
     std::vector<Card> dealerhand, playerhand;
+    
     // get the number of decks; must be in the interval [1,8]
     do
     {
